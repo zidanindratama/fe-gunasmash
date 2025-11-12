@@ -42,7 +42,6 @@ function fmtDate(dt: string) {
 }
 
 function readingTime(html: string) {
-  // ambil teks kasar untuk hitung kata
   const text = html
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
@@ -76,10 +75,9 @@ function ArticleShell({ blog }: { blog: Blog }) {
   return (
     <main className="py-10 md:py-14">
       <div className="container mx-auto px-4">
-        {/* Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-sm">
           <Link
-            href="/blog"
+            href="/blogs"
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -199,7 +197,7 @@ function ArticleShell({ blog }: { blog: Blog }) {
 
                 <div className="flex items-center justify-between">
                   <Button asChild variant="ghost" size="sm">
-                    <Link href="/blog">Kembali</Link>
+                    <Link href="/blogs">Kembali</Link>
                   </Button>
                   <Button asChild size="sm">
                     <Link

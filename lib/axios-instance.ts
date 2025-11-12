@@ -19,7 +19,13 @@ type ErrResponse = {
 type ApiResponse<T> = OkResponse<T> | ErrResponse;
 
 type Role = "ADMIN" | "MEMBER";
-export type User = { id: string; name: string; email: string; role: Role };
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  avatarUrl?: string;
+};
 
 let accessToken: string | null = null;
 const ACCESS_TOKEN_KEY = "access_token";

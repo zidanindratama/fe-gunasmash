@@ -83,15 +83,9 @@ function BlogCard({ data }: { data: Blog }) {
               year: "numeric",
             }).format(d)}
           </span>
-          {data.published ? (
-            <Badge variant="outline" className="shrink-0">
-              Published
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="shrink-0">
-              Draft
-            </Badge>
-          )}
+          <Badge variant="outline" className="shrink-0">
+            Published
+          </Badge>
         </div>
         <h3 className="text-base font-semibold leading-snug">
           <Link
@@ -141,7 +135,7 @@ function BlogCard({ data }: { data: Blog }) {
       <CardFooter className="mt-3 flex items-center justify-between px-5 pb-5 pt-0">
         <Button asChild>
           <Link
-            href={`/blogs/${data.slug}`}
+            href={`/blogs/${data.id}`}
             className="inline-flex items-center gap-2"
           >
             Baca <ArrowRight className="h-4 w-4" />
@@ -158,8 +152,6 @@ function Toolbar({
   onQ,
   tag,
   onTag,
-  pub,
-  onPub,
   sort,
   onSort,
   tagOptions,
@@ -168,8 +160,6 @@ function Toolbar({
   onQ: (v: string) => void;
   tag: string | "ALL";
   onTag: (v: string | "ALL") => void;
-  pub: "all" | "published" | "draft";
-  onPub: (v: "all" | "published" | "draft") => void;
   sort: "newest" | "oldest" | "title";
   onSort: (v: "newest" | "oldest" | "title") => void;
   tagOptions: string[];
@@ -199,16 +189,6 @@ function Toolbar({
             ))}
           </SelectContent>
         </Select>
-        <Select value={pub} onValueChange={(v) => onPub(v as any)}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Status</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={sort} onValueChange={(v) => onSort(v as any)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Urutkan" />
@@ -227,7 +207,6 @@ function Toolbar({
 async function fetchBlogs(params: {
   q: string;
   tag: string | "ALL";
-  pub: "all" | "published" | "draft";
   sort: "newest" | "oldest" | "title";
   page: number;
   limit: number;
@@ -235,11 +214,10 @@ async function fetchBlogs(params: {
   const qp: Record<string, string> = {
     page: String(params.page),
     limit: String(params.limit),
+    published: "true",
   };
   if (params.q.trim()) qp.q = params.q.trim();
   if (params.tag !== "ALL") qp.tag = params.tag;
-  if (params.pub !== "all")
-    qp.published = params.pub === "published" ? "true" : "false";
   if (params.sort === "title") {
     qp.sortBy = "title";
     qp.sortDir = "asc";
@@ -262,7 +240,13 @@ async function fetchBlogTags(): Promise<string[]> {
   const res = await api.get<ApiResponse<ListShape<Pick<Blog, "tags">>>>(
     "/api/blogs",
     {
-      params: { page: 1, limit: 200, sortBy: "createdAt", sortDir: "desc" },
+      params: {
+        page: 1,
+        limit: 200,
+        sortBy: "createdAt",
+        sortDir: "desc",
+        published: "true",
+      },
     }
   );
   if (!("success" in res.data) || !res.data.success) return [];
@@ -280,9 +264,6 @@ export default function Blogs() {
   const [tag, setTag] = React.useState<string | "ALL">(
     (sp.get("tag") as string) || "ALL"
   );
-  const [pub, setPub] = React.useState<"all" | "published" | "draft">(
-    (sp.get("pub") as any) || "all"
-  );
   const [sort, setSort] = React.useState<"newest" | "oldest" | "title">(
     (sp.get("sort") as any) || "newest"
   );
@@ -292,14 +273,14 @@ export default function Blogs() {
   const pageSize = 9;
 
   const { data: tagsData } = useQuery({
-    queryKey: ["blog-tags"],
+    queryKey: ["blog-tags", "published"],
     queryFn: fetchBlogTags,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["blogs", q, tag, pub, sort, page, pageSize],
-    queryFn: () => fetchBlogs({ q, tag, pub, sort, page, limit: pageSize }),
+    queryKey: ["blogs", q, tag, sort, page, pageSize, "published"],
+    queryFn: () => fetchBlogs({ q, tag, sort, page, limit: pageSize }),
   });
 
   const items = data?.items ?? [];
@@ -312,12 +293,11 @@ export default function Blogs() {
     const params = new URLSearchParams();
     if (q.trim()) params.set("q", q);
     if (tag !== "ALL") params.set("tag", tag);
-    if (pub !== "all") params.set("pub", pub);
     if (sort !== "newest") params.set("sort", sort);
     if (page !== 1) params.set("page", String(page));
     const qs = params.toString();
     router.replace(qs ? `/blogs?${qs}` : "/blogs");
-  }, [q, tag, pub, sort, page, router]);
+  }, [q, tag, sort, page, router]);
 
   React.useEffect(() => {
     if (page > totalPages) setPage(1);
@@ -351,11 +331,6 @@ export default function Blogs() {
               onTag={(v) => {
                 setPage(1);
                 setTag(v);
-              }}
-              pub={pub}
-              onPub={(v) => {
-                setPage(1);
-                setPub(v);
               }}
               sort={sort}
               onSort={(v) => {
