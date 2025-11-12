@@ -211,7 +211,7 @@ export function SiteNavbar({ className }: { className?: string }) {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link
-                    href="/blogs"
+                    href="/dashboard/blogs"
                     className="flex w-full items-center gap-2"
                   >
                     <Newspaper className="h-4 w-4" />
@@ -330,7 +330,7 @@ export function SiteNavbar({ className }: { className?: string }) {
                         Pengguna
                       </Link>
                       <Link
-                        href="/blogs"
+                        href="/dashboard/blogs"
                         onClick={() => setOpen(false)}
                         className="rounded-lg px-3 py-3 text-base hover:bg-accent/60"
                       >
