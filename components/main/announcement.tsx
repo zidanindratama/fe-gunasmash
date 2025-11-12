@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, ArrowRight, Shapes } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { cn } from "@/lib/utils";
+import api from "@/lib/axios-instance";
 
 type AnnType =
   | "TRAINING"
@@ -35,44 +36,28 @@ type Announcement = {
   locationLink?: string | null;
 };
 
-const mockAnnouncements: Announcement[] = [
-  {
-    id: "a1",
-    title: "Latihan Rutin Rabu Sore",
-    datetime: "2025-11-05T15:00:00+07:00",
-    location: "Sport Center Kampus H",
-    type: "TRAINING",
-    imageUrl:
-      "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    id: "a2",
-    title: "Sparring Persiapan Turnamen",
-    datetime: "2025-11-09T11:00:00+07:00",
-    location: "GOR Gloria",
-    type: "SPARRING",
-    imageUrl:
-      "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    id: "a3",
-    title: "Briefing Panitia Internal Cup",
-    datetime: "2025-11-07T19:00:00+07:00",
-    location: "Ruang Rapat BEM",
-    type: "BRIEFING",
-    imageUrl:
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    id: "a4",
-    title: "Open Recruitment Anggota Baru",
-    datetime: "2025-11-12T10:00:00+07:00",
-    location: "Kampus H Lobby",
-    type: "RECRUITMENT",
-    imageUrl:
-      "https://images.unsplash.com/photo-1516251193007-45ef944ab0c6?q=80&w=1200&auto=format&fit=crop",
-  },
-];
+type ListResult<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+type OkResponse<T> = { success: true; data: T };
+type ErrResponse = { success: false; error: { message: string } };
+type ApiResponse<T> = OkResponse<T> | ErrResponse;
+
+async function fetchLatestAnnouncements(limit = 3): Promise<Announcement[]> {
+  const res = await api.get<ApiResponse<ListResult<Announcement>>>(
+    "/api/announcements",
+    {
+      params: { limit, page: 1 },
+    }
+  );
+  if (!("success" in res.data) || !res.data.success)
+    throw new Error("Failed to fetch announcements");
+  return res.data.data.items;
+}
 
 function formatDateBits(dt: string) {
   const d = new Date(dt);
@@ -164,7 +149,6 @@ function AnnouncementCard({ data }: { data: Announcement }) {
   const { day, mon, wk, time, date } = formatDateBits(data.datetime);
   const isThisWeek = withinThisWeek(date);
   const ts = typeStyle(data.type);
-
   return (
     <Card className="group relative flex h-full max-w-none flex-col overflow-hidden rounded-3xl border bg-background/80 shadow-none ring-1 ring-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:ring-primary/20">
       <CardHeader className="flex flex-row items-center gap-3 px-5 py-4 text-base font-semibold">
@@ -183,7 +167,6 @@ function AnnouncementCard({ data }: { data: Announcement }) {
           </div>
         </div>
       </CardHeader>
-
       <CardContent className="px-5">
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
@@ -202,7 +185,6 @@ function AnnouncementCard({ data }: { data: Announcement }) {
             {data.location}
           </span>
         </div>
-
         {data.imageUrl ? (
           <div className="relative overflow-hidden rounded-2xl">
             <AspectRatio ratio={16 / 9}>
@@ -239,7 +221,6 @@ function AnnouncementCard({ data }: { data: Announcement }) {
           <div className="aspect-video w-full rounded-2xl bg-muted" />
         )}
       </CardContent>
-
       <CardFooter className="mt-4 flex items-center justify-between px-5 pb-5 pt-0">
         <Button asChild>
           <Link
@@ -261,7 +242,6 @@ function AnnouncementCard({ data }: { data: Announcement }) {
           </Button>
         ) : null}
       </CardFooter>
-
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-border/60 to-transparent" />
     </Card>
   );
@@ -294,20 +274,11 @@ export function AnnouncementSection({
   className?: string;
   initialCount?: number;
 }) {
-  const [loading, setLoading] = React.useState(true);
-  const [items, setItems] = React.useState<Announcement[]>([]);
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      const sorted = [...mockAnnouncements].sort(
-        (a, b) =>
-          new Date(b.datetime).getTime() - new Date(a.datetime).getTime()
-      );
-      setItems(sorted.slice(0, Math.max(1, initialCount)));
-      setLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [initialCount]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["announcements", "latest", initialCount],
+    queryFn: () => fetchLatestAnnouncements(initialCount),
+    staleTime: 30_000,
+  });
 
   return (
     <section className={cn("py-12 md:py-16", className)}>
@@ -325,16 +296,15 @@ export function AnnouncementSection({
             <Link href="/announcements">Lihat Semua</Link>
           </Button>
         </div>
-
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: initialCount }).map((_, i) => (
               <AnnouncementSkeleton key={i} />
             ))}
           </div>
-        ) : items.length ? (
+        ) : data && data.length ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((a) => (
+            {data.map((a) => (
               <AnnouncementCard key={a.id} data={a} />
             ))}
           </div>

@@ -4,7 +4,7 @@ import FAQ from "@/components/main/about/faq";
 import MissionValues from "@/components/main/about/mission-values";
 import { CTA } from "@/components/main/cta";
 
-export default function About() {
+export default function AboutPage() {
   return (
     <>
       <AboutHero heroImageUrl="/main/about/hero.jpg" />
