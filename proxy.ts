@@ -93,7 +93,7 @@ export function proxy(request: NextRequest) {
 
       if (pathname.startsWith("/auth")) {
         const redirectPath =
-          userRole === "ADMIN" ? "/dashboard" : "/attendance/check-in";
+          userRole === "ADMIN" ? "/dashboard" : "/member/check-in";
         return NextResponse.redirect(new URL(redirectPath, request.url));
       }
 
@@ -108,7 +108,7 @@ export function proxy(request: NextRequest) {
       }
 
       if (
-        (pathname.startsWith("/attendance/check-in") ||
+        (pathname.startsWith("/member/check-in") ||
           pathname.startsWith("/member/profile")) &&
         userRole === "ADMIN"
       ) {
