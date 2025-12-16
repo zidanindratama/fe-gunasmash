@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Mail, Phone, Clock } from "lucide-react";
+import { MapPin, Phone, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ContactLocation() {
@@ -36,9 +36,11 @@ export function ContactLocation() {
                   Training Hours
                 </h4>
                 <p className="text-muted-foreground">
-                  Wednesday: 16:00 - 20:00
+                  <strong>Wednesday (Sport Center Kampus H):</strong> 15:00 -
+                  18:00
                   <br />
-                  Friday: 16:00 - 21:00 (Sparring)
+                  <strong>Sunday (GOR Gloria):</strong> 11:00 - 14:00 (Sesi
+                  Reguler)
                 </p>
               </div>
             </div>
@@ -52,7 +54,7 @@ export function ContactLocation() {
                 <p className="text-muted-foreground">
                   join@gunasmash.id
                   <br />
-                  +62 812-9102-0590 (Sport Center Admin)
+                  +62 877-1404-4760 (Sport Center Admin)
                 </p>
               </div>
             </div>
@@ -61,7 +63,7 @@ export function ContactLocation() {
           <div className="mt-10">
             <Button size="lg" className="rounded-full px-8" asChild>
               <a
-                href="https://maps.app.goo.gl/xyz"
+                href="https://maps.app.goo.gl/24VV7JXpAFDWPQ76A"
                 target="_blank"
                 rel="noopener noreferrer"
               >

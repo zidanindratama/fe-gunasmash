@@ -16,7 +16,7 @@ export const FAQ_DATA = [
   {
     question: "How much is the membership fee?",
     answer:
-      "Membership fees are very affordable for students. Full pricing details can be viewed after you register for an account in the Member Area.",
+      "As a university student club (UKM), basic membership is FREE! This covers regular training access. Fees may apply only for competitive programs, official tournament registrations, or optional specialized training camps. Full details are available in the Member Area.",
   },
   {
     question: "When are the training schedules?",
