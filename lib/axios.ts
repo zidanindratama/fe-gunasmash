@@ -1,7 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getAccessToken, setAccessToken } from "./utils";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://be-gunasmash.vercel.app/api";
 
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
