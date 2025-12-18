@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default function AuthLayout({
   children,
@@ -40,7 +41,9 @@ export default function AuthLayout({
       </div>
 
       <div className="flex items-center justify-center p-6 md:p-12 bg-background">
-        <div className="w-full max-w-[400px] space-y-6">{children}</div>
+        <div className="w-full max-w-[400px] space-y-6">
+          <Suspense>{children}</Suspense>
+        </div>
       </div>
     </div>
   );
