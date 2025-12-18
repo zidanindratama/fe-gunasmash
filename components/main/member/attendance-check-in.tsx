@@ -16,7 +16,7 @@ import {
   AlertTriangle,
   Loader2,
   ListTodo,
-  ShieldCheck, // Icon baru untuk status
+  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -24,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+
+const ATTENDANCE_WINDOW_HOURS = 3;
 
 interface MemberSessionItem {
   id: string;
@@ -46,7 +48,9 @@ function SessionCard({
   const dateStr = format(dateTime, "EEEE, d MMM yyyy", { locale: idLocale });
   const timeStr = format(dateTime, "HH:mm 'WIB'");
 
-  const isPast = dateTime.getTime() < Date.now();
+  const expiryTime =
+    dateTime.getTime() + ATTENDANCE_WINDOW_HOURS * 60 * 60 * 1000;
+  const isExpired = Date.now() > expiryTime;
 
   if (session.isUserAttended) {
     return (
@@ -74,7 +78,7 @@ function SessionCard({
     );
   }
 
-  if (isPast) {
+  if (isExpired) {
     return (
       <Card className="border-destructive bg-red-50/50 dark:bg-red-900/10 shadow-lg opacity-70">
         <CardHeader className="p-4 md:p-6">
@@ -87,8 +91,9 @@ function SessionCard({
           <p className="font-semibold text-foreground text-lg">
             {session.title}
           </p>
-          <p className="text-sm text-destructive/80">
-            Attendance window has passed. You cannot check in for this session.
+          <p className="text-sm text-destructive/80 italic">
+            Attendance window has ended (Closed {ATTENDANCE_WINDOW_HOURS}h after
+            start time).
           </p>
         </CardContent>
       </Card>
@@ -103,9 +108,9 @@ function SessionCard({
         </CardTitle>
         <Badge
           variant="default"
-          className="bg-primary hover:bg-primary/90 text-white shadow-md"
+          className="bg-primary hover:bg-primary/90 text-white shadow-md animate-pulse"
         >
-          Active
+          Open Now
         </Badge>
       </CardHeader>
       <CardContent className="p-4 md:p-6 pt-0 space-y-4">
@@ -211,7 +216,7 @@ export function MemberCheckInView() {
             </CardHeader>
             <CardContent>
               <div className="font-oswald text-3xl font-bold">
-                {isLoading ? <Skeleton className="h-8 w-1/3" /> : totalActive}
+                {isLoading ? <Skeleton className="h-8 w-10" /> : totalActive}
               </div>
             </CardContent>
           </Card>
@@ -226,7 +231,7 @@ export function MemberCheckInView() {
             <CardContent>
               <div className="font-oswald text-3xl font-bold">
                 {isLoading ? (
-                  <Skeleton className="h-8 w-1/2" />
+                  <Skeleton className="h-8 w-24" />
                 ) : totalActive === 0 ? (
                   "N/A"
                 ) : totalAttended === totalActive ? (
@@ -247,7 +252,7 @@ export function MemberCheckInView() {
             </CardHeader>
             <CardContent>
               <div className="font-oswald text-3xl font-bold text-green-600">
-                {isLoading ? <Skeleton className="h-8 w-1/3" /> : totalAttended}
+                {isLoading ? <Skeleton className="h-8 w-10" /> : totalAttended}
               </div>
             </CardContent>
           </Card>
@@ -255,8 +260,8 @@ export function MemberCheckInView() {
 
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2">
-            <Skeleton className="h-56" />
-            <Skeleton className="h-56" />
+            <Skeleton className="h-56 w-full rounded-xl" />
+            <Skeleton className="h-56 w-full rounded-xl" />
           </div>
         ) : sortedSessions.length === 0 ? (
           <div className="text-center py-20 border border-dashed rounded-xl text-muted-foreground bg-muted/20">

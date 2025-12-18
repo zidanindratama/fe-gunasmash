@@ -51,23 +51,16 @@ const TAG_OPTIONS: Option[] = [
   { label: "Story", value: "story" },
 ];
 
-const tiptapImageUploader = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append("file", file);
-  try {
-    const { data } = await axiosInstance.post("/uploads/image", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return data.data.url;
-  } catch (error) {
-    console.error("Image upload failed", error);
-    toast.error("Failed to upload image inside editor.");
-    throw error;
-  }
+const createSlug = (str: string) => {
+  return str
+    .toLowerCase()
+    .replace(/[^\w ]+/g, "")
+    .replace(/ +/g, "-");
 };
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters."),
+  slug: z.string().min(3, "Slug is required."),
   content: z.string().min(10, "Content must be at least 10 characters."),
   coverUrl: z.string().optional().nullable(),
   tags: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
@@ -88,6 +81,21 @@ interface BlogEditViewProps {
   slug: string;
 }
 
+const tiptapImageUploader = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  try {
+    const { data } = await axiosInstance.post("/uploads/image", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data.data.url;
+  } catch (error) {
+    console.error("Image upload failed", error);
+    toast.error("Failed to upload image inside editor.");
+    throw error;
+  }
+};
+
 export function BlogEditView({ slug }: BlogEditViewProps) {
   const router = useRouter();
 
@@ -104,6 +112,7 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
+      slug: "",
       content: "",
       coverUrl: "",
       tags: [],
@@ -120,6 +129,7 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
 
       form.reset({
         title: blogData.title,
+        slug: blogData.slug,
         content: blogData.content,
         coverUrl: blogData.coverUrl,
         published: blogData.published,
@@ -128,8 +138,15 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
     }
   }, [blogData, form]);
 
+  const watchedTitle = form.watch("title");
+  useEffect(() => {
+    if (watchedTitle && blogData) {
+      form.setValue("slug", createSlug(watchedTitle), { shouldValidate: true });
+    }
+  }, [watchedTitle, blogData, form]);
+
   const { mutate: updateBlog, isPending: isSaving } = usePatchData({
-    url: `/blogs/${slug}`,
+    url: `/blogs`,
     invalidateKeys: [["blogs"], ["blog-detail", slug]],
     successMessage: "Blog post updated successfully!",
     onSuccess: () => {
@@ -158,11 +175,9 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
     const tagsArray = values.tags?.map((t) => t.value) || [];
 
     updateBlog({
+      slug: slug,
       data: {
-        title: values.title,
-        content: values.content,
-        published: values.published,
-        coverUrl: values.coverUrl || null,
+        ...values,
         tags: tagsArray,
       },
     });
@@ -174,26 +189,28 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
 
   if (isErrorData || !blogData) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
-          Failed to fetch blog post data. It might not exist or there was a
-          network error.
-        </AlertDescription>
-        <Button
-          variant="outline"
-          className="mt-4 border-destructive/50"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-        </Button>
-      </Alert>
+      <div className="max-w-5xl mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to fetch blog post data. It might not exist or there was a
+            network error.
+          </AlertDescription>
+          <Button
+            variant="outline"
+            className="mt-4 border-destructive/50"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+          </Button>
+        </Alert>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto pb-10">
+    <div className="max-w-5xl mx-auto pb-10 px-4">
       <div className="flex items-center gap-4 mb-8">
         <Button
           variant="outline"
@@ -216,7 +233,7 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-8 md:grid-cols-[1fr_300px]"
+          className="grid gap-8 md:grid-cols-[1fr_350px]"
         >
           <div className="space-y-8">
             <Card>
@@ -234,6 +251,28 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Slug (URL Identifier)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="auto-generated-slug"
+                          className="bg-muted font-mono text-xs"
+                          {...field}
+                          readOnly
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        URL updates automatically with title.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -310,7 +349,7 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
                     ) : (
                       <Save className="mr-2 h-4 w-4" />
                     )}
-                    Update Post
+                    Update
                   </Button>
                 </div>
               </CardContent>
@@ -348,16 +387,13 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
                         ) : (
                           <div className="text-center p-4">
                             {isUploadingCover ? (
-                              <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                              <Loader2 className="h-8 w-8 animate-spin mx-auto" />
                             ) : (
-                              <UploadCloud className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                              <UploadCloud className="h-8 w-8 mx-auto mb-2" />
                             )}
-                            <p className="text-xs text-muted-foreground">
-                              Click to upload cover image
-                            </p>
+                            <p className="text-xs">Upload cover image</p>
                           </div>
                         )}
-
                         <Input
                           type="file"
                           accept="image/*"
@@ -390,7 +426,7 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
                           placeholder="Select tags..."
                           creatable
                           emptyIndicator={
-                            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-center text-sm">
                               No tags found.
                             </p>
                           }
@@ -411,7 +447,7 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
 
 function BlogEditSkeleton() {
   return (
-    <div className="max-w-5xl mx-auto pb-10 space-y-8">
+    <div className="max-w-5xl mx-auto pb-10 px-4 space-y-8">
       <div className="flex items-center gap-4">
         <Skeleton className="h-9 w-9" />
         <div className="space-y-2">
@@ -419,11 +455,13 @@ function BlogEditSkeleton() {
           <Skeleton className="h-4 w-32" />
         </div>
       </div>
-      <div className="grid gap-8 md:grid-cols-[1fr_300px]">
-        <Skeleton className="h-[600px] w-full rounded-xl" />
+      <div className="grid gap-8 md:grid-cols-[1fr_350px]">
+        <div className="space-y-6">
+          <Skeleton className="h-[500px] w-full rounded-xl" />
+        </div>
         <div className="space-y-6">
           <Skeleton className="h-[200px] w-full rounded-xl" />
-          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[250px] w-full rounded-xl" />
           <Skeleton className="h-[150px] w-full rounded-xl" />
         </div>
       </div>

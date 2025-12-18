@@ -41,7 +41,7 @@ export function BlogActions({ blog }: BlogActionsProps) {
   const [open, setOpen] = useState(false);
 
   const { mutate: deleteBlog, isPending } = useDeleteData({
-    url: `/blogs/${blog.slug}`,
+    url: `/blogs`,
     invalidateKeys: [["blogs"]],
     successMessage: "Blog post deleted successfully.",
     onSuccess: () => setOpen(false),
@@ -110,7 +110,7 @@ export function BlogActions({ blog }: BlogActionsProps) {
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={(e) => {
                 e.preventDefault();
-                deleteBlog(blog.id);
+                deleteBlog(blog.slug);
               }}
               disabled={isPending}
             >

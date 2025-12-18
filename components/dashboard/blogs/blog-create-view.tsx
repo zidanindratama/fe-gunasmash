@@ -43,11 +43,19 @@ const TAG_OPTIONS: Option[] = [
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters."),
+  slug: z.string().min(3, "Slug is required."),
   content: z.string().min(10, "Content must be at least 10 characters."),
   coverUrl: z.string().optional(),
   tags: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
   published: z.boolean(),
 });
+
+const createSlug = (str: string) => {
+  return str
+    .toLowerCase()
+    .replace(/[^\w ]+/g, "")
+    .replace(/ +/g, "-");
+};
 
 const tiptapImageUploader = async (file: File): Promise<string> => {
   const formData = new FormData();
@@ -71,12 +79,20 @@ export function BlogCreateView() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
+      slug: "",
       content: "",
       coverUrl: "",
       tags: [],
       published: false,
     },
   });
+
+  const title = form.watch("title");
+  useEffect(() => {
+    if (title) {
+      form.setValue("slug", createSlug(title), { shouldValidate: true });
+    }
+  }, [title, form]);
 
   const { mutate: createBlog, isPending: isSaving } = usePostData({
     url: "/blogs",
@@ -103,6 +119,7 @@ export function BlogCreateView() {
       uploadCover(formData);
     }
   };
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const tagsArray = values.tags?.map((t) => t.value) || [];
 
@@ -161,6 +178,28 @@ export function BlogCreateView() {
 
                 <FormField
                   control={form.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Slug (URL Identifier)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="auto-generated-slug"
+                          className="bg-muted font-mono text-xs"
+                          {...field}
+                          readOnly
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        This is how your blog will appear in the URL.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="content"
                   render={({ field }) => (
                     <FormItem>
@@ -174,7 +213,7 @@ export function BlogCreateView() {
                           output="html"
                           placeholder="Start writing your story..."
                           editable={true}
-                          editorClassName="focus:outline-hidden"
+                          editorClassName="focus:outline-none"
                           throttleDelay={1000}
                           uploader={tiptapImageUploader}
                         />
