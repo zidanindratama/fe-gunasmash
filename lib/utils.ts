@@ -1,18 +1,29 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { AxiosError } from "axios";
+import Cookies from "js-cookie";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-let accessToken: string | null = null;
+const ACCESS_TOKEN_KEY = "accessToken";
 
 export const setAccessToken = (token: string | null) => {
-  accessToken = token;
+  if (token) {
+    Cookies.set(ACCESS_TOKEN_KEY, token, {
+      expires: 1 / 96,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+  } else {
+    Cookies.remove(ACCESS_TOKEN_KEY);
+  }
 };
 
-export const getAccessToken = () => accessToken;
+export const getAccessToken = () => {
+  return Cookies.get(ACCESS_TOKEN_KEY) || null;
+};
 
 export const getErrorMessage = (error: unknown): string => {
   if (error instanceof AxiosError) {

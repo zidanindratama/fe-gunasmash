@@ -2,130 +2,66 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtDecode } from "jwt-decode";
 
-const PUBLIC_ROUTES = ["/", "/auth/sign-in", "/auth/sign-up", "/unauthorized"];
-
-// --- Rute Admin-Only ---
-function isProtectedAdminRoute(pathname: string): boolean {
-  const adminOnlySections = ["/dashboard/members", "/dashboard/settings"];
-  const adminOnlyActions = [
-    "/create",
-    "/edit",
-    "/delete",
-    "/dashboard/attendances/create",
-    "/dashboard/blogs/create",
-  ];
-
-  if (adminOnlySections.some((section) => pathname.startsWith(section))) {
-    return true;
-  }
-
-  if (adminOnlyActions.some((action) => pathname.includes(action))) {
-    return true;
-  }
-
-  if (pathname.startsWith("/dashboard/profile")) {
-    return true;
-  }
-
-  return false;
-}
-
-function isProtectedRoute(pathname: string): boolean {
-  if (pathname.startsWith("/dashboard")) {
-    return true;
-  }
-
-  if (pathname.startsWith("/member/check-in")) {
-    return true;
-  }
-
-  if (pathname.startsWith("/member/profile")) {
-    return true;
-  }
-
-  return false;
-}
-
 interface CustomJwtPayload {
   role?: string;
+  sub?: string;
   exp?: number;
-  [key: string]: any;
 }
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get("accessToken")?.value;
 
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/static") ||
-    pathname.includes(".")
-  ) {
+  console.log(`--- Middleware Checking: ${pathname} ---`);
+
+  if (!token) {
+    console.log("No token found in cookies.");
+    if (pathname.startsWith("/dashboard") || pathname.startsWith("/member")) {
+      console.log("Redirecting to /unauthorized (No Token)");
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
     return NextResponse.next();
   }
 
-  if (PUBLIC_ROUTES.includes(pathname)) {
+  try {
+    const decoded = jwtDecode<CustomJwtPayload>(token);
+    const userRole = decoded.role;
+
+    console.log(`Token valid. User Role: [${userRole}]`);
+
+    if (pathname.startsWith("/dashboard")) {
+      if (userRole !== "ADMIN") {
+        console.log(
+          `Access Denied to Dashboard: Role is ${userRole}, expected ADMIN`
+        );
+        return NextResponse.redirect(new URL("/unauthorized", request.url));
+      }
+    }
+
+    if (pathname.startsWith("/member")) {
+      if (userRole !== "MEMBER") {
+        console.log(
+          `Access Denied to Member Area: Role is ${userRole}, expected MEMBER`
+        );
+        return NextResponse.redirect(new URL("/unauthorized", request.url));
+      }
+    }
+
+    if (pathname.startsWith("/auth")) {
+      console.log("User already logged in. Redirecting away from Auth page.");
+      const redirectUrl =
+        userRole === "ADMIN" ? "/dashboard" : "/member/check-in";
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
+    }
+
+    console.log("Access Granted.");
     return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware Auth Error (Token Corrupt?):", error);
+    return NextResponse.redirect(new URL("/unauthorized", request.url));
   }
-
-  if (isProtectedRoute(pathname)) {
-    const memberPortalUrl = new URL("/member/check-in", request.url);
-    const unauthorizedUrl = new URL("/unauthorized", request.url);
-    const loginUrl = new URL("/auth/sign-in", request.url);
-
-    const token = request.cookies.get("refreshToken")?.value;
-
-    if (!token) {
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    try {
-      const decoded = jwtDecode<CustomJwtPayload>(token);
-      const userRole = decoded.role;
-
-      const currentTime = Date.now() / 1000;
-      if (decoded.exp && decoded.exp < currentTime) {
-        const response = NextResponse.redirect(loginUrl);
-        response.cookies.delete("refreshToken");
-        return response;
-      }
-
-      if (pathname.startsWith("/auth")) {
-        const redirectPath =
-          userRole === "ADMIN" ? "/dashboard" : "/member/check-in";
-        return NextResponse.redirect(new URL(redirectPath, request.url));
-      }
-
-      if (isProtectedAdminRoute(pathname)) {
-        if (userRole !== "ADMIN") {
-          return NextResponse.redirect(unauthorizedUrl);
-        }
-      }
-
-      if (pathname === "/dashboard" && userRole === "MEMBER") {
-        return NextResponse.redirect(memberPortalUrl);
-      }
-
-      if (
-        (pathname.startsWith("/member/check-in") ||
-          pathname.startsWith("/member/profile")) &&
-        userRole === "ADMIN"
-      ) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-
-      return NextResponse.next();
-    } catch (error) {
-      console.error("Middleware Decode Error:", error);
-      const url = new URL("/auth/sign-in", request.url);
-      return NextResponse.redirect(url);
-    }
-  }
-
-  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/dashboard/:path*", "/member/:path*", "/auth/:path*"],
 };

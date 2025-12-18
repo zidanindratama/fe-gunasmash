@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,13 +31,22 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  const searchParams = useSearchParams();
+
   const { mutate: login, isPending } = usePostData({
     url: "/auth/sign-in",
     successMessage: "Welcome back!",
     onSuccess: (response: any) => {
       setAccessToken(response.accessToken);
 
-      router.push("/dashboard");
+      const callbackUrl = searchParams.get("callbackUrl");
+
+      const defaultRedirect =
+        response.user.role === "ADMIN" ? "/dashboard" : "/member/check-in";
+
+      const redirectPath = callbackUrl || defaultRedirect;
+
+      router.push(redirectPath);
     },
   });
 

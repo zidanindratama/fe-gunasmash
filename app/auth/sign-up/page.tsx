@@ -48,7 +48,11 @@ export default function SignUpPage() {
     successMessage: "Account created successfully! Welcome aboard.",
     onSuccess: (response: any) => {
       setAccessToken(response.accessToken);
-      router.push("/dashboard");
+
+      const redirectPath =
+        response.user.role === "ADMIN" ? "/dashboard" : "/member/check-in";
+
+      router.push(redirectPath);
     },
   });
 
