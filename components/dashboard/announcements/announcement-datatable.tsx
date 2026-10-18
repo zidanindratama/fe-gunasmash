@@ -17,7 +17,11 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PaginationState, ColumnFiltersState } from "@tanstack/react-table";
+import {
+  PaginationState,
+  ColumnFiltersState,
+  SortingState,
+} from "@tanstack/react-table";
 
 interface AnnouncementsApiResponse {
   items: Announcement[];
@@ -38,6 +42,7 @@ export function AnnouncementDataTable() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
@@ -53,7 +58,7 @@ export function AnnouncementDataTable() {
   }, [searchTerm]);
 
   const filterParams = React.useMemo(() => {
-    const filterObj: Record<string, any> = {};
+    const filterObj: Record<string, unknown> = {};
     columnFilters.forEach((filter) => {
       if (filter.value && filter.id !== "title") {
         filterObj[filter.id] = filter.value;
@@ -76,12 +81,16 @@ export function AnnouncementDataTable() {
       String(pagination.pageSize),
       filterParams || "",
       debouncedSearch,
+      JSON.stringify(sorting),
     ],
     params: {
       page: pagination.pageIndex + 1,
       limit: pagination.pageSize,
       filter: filterParams,
       search: debouncedSearch,
+      sort: sorting[0]
+        ? `${sorting[0].id}:${sorting[0].desc ? "desc" : "asc"}`
+        : undefined,
     },
   });
 
@@ -109,7 +118,7 @@ export function AnnouncementDataTable() {
       | ((old: ColumnFiltersState) => ColumnFiltersState)
   ) => {
     setColumnFilters((old) => {
-      let next =
+      const next =
         typeof updaterOrValue === "function"
           ? updaterOrValue(old)
           : updaterOrValue;
@@ -142,10 +151,18 @@ export function AnnouncementDataTable() {
         data={announcements}
         searchKey="title"
         filters={filters}
-        pageCount={apiData?.meta.pages || -1}
+        pageCount={Math.max(1, apiData?.meta.pages ?? 1)}
         pagination={pagination}
         onPaginationChange={setPagination}
         rowCount={apiData?.meta.total}
+        sorting={sorting}
+        onSortingChange={(updater) => {
+          setSorting((current) =>
+            typeof updater === "function" ? updater(current) : updater
+          );
+          setPagination((current) => ({ ...current, pageIndex: 0 }));
+        }}
+        manualSorting
         columnFilters={columnFilters}
         onColumnFiltersChange={handleColumnFiltersChange}
       />

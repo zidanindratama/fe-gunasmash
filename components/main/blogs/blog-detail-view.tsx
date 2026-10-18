@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGetData } from "@/hooks/use-get-data";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getDisplayImageUrl } from "@/lib/image-url";
 
 interface BlogDetail {
   id: string;
@@ -120,6 +121,7 @@ export function BlogDetailView({ slug }: { slug: string }) {
                     }
                     alt={data.author.name}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 )}
@@ -152,10 +154,7 @@ export function BlogDetailView({ slug }: { slug: string }) {
 
         <div className="relative w-full aspect-video rounded-3xl overflow-hidden mb-12 border border-border/50 shadow-sm">
           <Image
-            src={
-              data.coverUrl ||
-              "https://images.unsplash.com/photo-1579201584210-941c4dc71578?q=80&w=2070&auto=format&fit=crop"
-            }
+            src={getDisplayImageUrl(data.coverUrl)}
             alt={data.title}
             fill
             className="object-cover"

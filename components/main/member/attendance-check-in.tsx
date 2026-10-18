@@ -5,7 +5,6 @@
 import { useState } from "react";
 import { useGetData } from "@/hooks/use-get-data";
 import { usePostData } from "@/hooks/use-post-data";
-import { toast } from "sonner";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import {
@@ -51,6 +50,7 @@ function SessionCard({
   const expiryTime =
     dateTime.getTime() + ATTENDANCE_WINDOW_HOURS * 60 * 60 * 1000;
   const isExpired = Date.now() > expiryTime;
+  const isUpcoming = dateTime.toDateString() !== new Date().toDateString();
 
   if (session.isUserAttended) {
     return (
@@ -110,7 +110,7 @@ function SessionCard({
           variant="default"
           className="bg-primary hover:bg-primary/90 text-white shadow-md animate-pulse"
         >
-          Open Now
+          {isUpcoming ? "Upcoming" : "Open Today"}
         </Badge>
       </CardHeader>
       <CardContent className="p-4 md:p-6 pt-0 space-y-4">
@@ -128,10 +128,12 @@ function SessionCard({
         <Button
           className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 shadow-md transition-transform hover:scale-[1.01]"
           onClick={() => onCheckIn(session.id)}
-          disabled={isCheckingIn}
+          disabled={isCheckingIn || isUpcoming}
         >
           {isCheckingIn ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : isUpcoming ? (
+            "Check-in opens on session day"
           ) : (
             "Check In Now"
           )}
@@ -161,12 +163,8 @@ export function MemberCheckInView() {
       setIsCheckingIn(false);
       refetch();
     },
-    onError: (e) => {
+    onError: () => {
       setIsCheckingIn(false);
-      const msg =
-        (e as any)?.response?.data?.error?.message ||
-        "Check-in failed due to server error.";
-      toast.error(msg);
     },
   });
 

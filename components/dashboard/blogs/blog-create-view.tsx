@@ -29,6 +29,7 @@ import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap/minimal-tipt
 import MultipleSelector, { Option } from "@/components/ui/multiple-selector";
 import { usePostData } from "@/hooks/use-post-data";
 import { useUploadData } from "@/hooks/use-upload-data";
+import { getDisplayImageUrl } from "@/lib/image-url";
 
 const TAG_OPTIONS: Option[] = [
   { label: "News", value: "news" },
@@ -125,6 +126,7 @@ export function BlogCreateView() {
 
     createBlog({
       ...values,
+      coverUrl: values.coverUrl || undefined,
       tags: tagsArray,
     });
   };
@@ -289,7 +291,7 @@ export function BlogCreateView() {
                         {field.value ? (
                           <>
                             <Image
-                              src={field.value}
+                              src={getDisplayImageUrl(field.value)}
                               alt="Cover"
                               fill
                               className="object-cover"

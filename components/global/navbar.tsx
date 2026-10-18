@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { useGetData } from "@/hooks/use-get-data";
 import { useDeleteData } from "@/hooks/use-delete-data";
-import { setAccessToken } from "@/lib/utils";
+import { getAccessToken, setAccessToken } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface UserProfile {
@@ -41,9 +41,14 @@ interface UserProfile {
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const isAuthPage = pathname.startsWith("/auth");
 
@@ -51,9 +56,13 @@ export function Navbar() {
     url: "/auth/me",
     key: ["me"],
     options: {
+      enabled: isMounted && Boolean(getAccessToken()),
       retry: false,
     },
   });
+
+  const isLoadingUserState =
+    !isMounted || (Boolean(getAccessToken()) && isLoadingUser);
 
   const userRole = user?.role;
 
@@ -202,7 +211,7 @@ export function Navbar() {
 
           {!isAuthPage && (
             <div className="hidden md:block">
-              {isLoadingUser ? (
+              {isLoadingUserState ? (
                 <Skeleton className="h-10 w-10 rounded-full" />
               ) : user ? (
                 <DropdownMenu>
@@ -290,6 +299,8 @@ export function Navbar() {
                 : "border-transparent bg-transparent"
             }`}
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isOpen}
           >
             <motion.div
               animate={{ rotate: isOpen ? 45 : 0, y: isOpen ? 6 : 0 }}
@@ -380,7 +391,7 @@ export function Navbar() {
 
                   {!isAuthPage && (
                     <div className="w-full">
-                      {isLoadingUser ? (
+                      {isLoadingUserState ? (
                         <div className="flex flex-col items-center gap-4">
                           <Skeleton className="h-16 w-16 rounded-full" />
                           <Skeleton className="h-6 w-32" />

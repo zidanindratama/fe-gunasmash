@@ -19,6 +19,18 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "api.dicebear.com",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.jsdelivr.net",
+      },
+      {
+        protocol: "https",
         hostname: "loremflickr.com",
       },
     ],

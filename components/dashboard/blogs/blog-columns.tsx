@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { BlogActions } from "./blog-actions";
 import { ImageIcon } from "lucide-react";
 import Image from "next/image";
+import { getDisplayImageUrl } from "@/lib/image-url";
 
 export type Blog = {
   id: string;
@@ -28,7 +29,7 @@ export const blogColumns: ColumnDef<Blog>[] = [
           <div className="h-10 w-16 relative overflow-hidden rounded-md border border-border bg-muted flex items-center justify-center flex-shrink-0">
             {row.original.coverUrl ? (
               <Image
-                src={row.original.coverUrl}
+                src={getDisplayImageUrl(row.original.coverUrl)}
                 alt={row.original.title}
                 fill
                 className="object-cover"

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { AxiosError } from "axios";
 import { useGetData } from "@/hooks/use-get-data";
 import { usePatchData } from "@/hooks/use-patch-data";
 import { usePostData } from "@/hooks/use-post-data";
@@ -51,7 +52,7 @@ import { cn } from "@/lib/utils";
 
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
-  useMemo(() => {
+  useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
@@ -82,10 +83,18 @@ interface SessionSummary {
   } | null;
   counts: {
     totalMembers: number;
+    attended: number;
     present: number;
+    late: number;
+    excused: number;
     absent: number;
   };
-  presentUsers: { id: string; name: string; email: string }[];
+  presentUsers: {
+    id: string;
+    name: string;
+    email: string;
+    attendanceStatus: "PRESENT" | "LATE" | "EXCUSED";
+  }[];
   absentUsers: { id: string; name: string; email: string }[];
 }
 
@@ -108,10 +117,17 @@ export function SessionDetailView({ id }: { id: string }) {
     open: boolean;
   } | null>(null);
 
-  const { data: sessionData, isLoading: isDetailLoading } =
+  const {
+    data: sessionData,
+    isLoading: isDetailLoading,
+    isError: isDetailError,
+    error: detailError,
+    refetch: refetchDetail,
+  } =
     useGetData<SessionDetail>({
       url: `/attendances/${id}`,
       key: ["session-detail-view", id],
+      options: { retry: false },
     });
 
   const announcementId = sessionData?.announcementId;
@@ -193,7 +209,7 @@ export function SessionDetailView({ id }: { id: string }) {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (e) {
+    } catch {
       toast.error("Failed to export CSV");
     }
   };
@@ -262,12 +278,29 @@ export function SessionDetailView({ id }: { id: string }) {
   }
 
   if (!sessionData) {
+    const detailStatus = (detailError as AxiosError | null)?.response?.status;
+    const canRetry = isDetailError && detailStatus !== 404;
+
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <h2 className="text-xl font-bold">Session Not Found</h2>
-        <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-        </Button>
+        <h2 className="text-xl font-bold">
+          {canRetry ? "Unable to Load Session" : "Session Not Found"}
+        </h2>
+        {canRetry && (
+          <p className="text-sm text-muted-foreground">
+            Please check your connection and try again.
+          </p>
+        )}
+        <div className="flex gap-2">
+          {canRetry && (
+            <Button variant="outline" onClick={() => refetchDetail()}>
+              Try Again
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+          </Button>
+        </div>
       </div>
     );
   }
@@ -338,7 +371,7 @@ export function SessionDetailView({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>
@@ -350,6 +383,36 @@ export function SessionDetailView({ id }: { id: string }) {
                 <Skeleton className="h-8 w-10" />
               ) : (
                 summary?.counts.totalMembers || 0
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Late</CardTitle>
+            <UserCheck className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">
+              {isSummaryLoading ? (
+                <Skeleton className="h-8 w-10" />
+              ) : (
+                summary?.counts.late || 0
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Excused</CardTitle>
+            <UserCheck className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {isSummaryLoading ? (
+                <Skeleton className="h-8 w-10" />
+              ) : (
+                summary?.counts.excused || 0
               )}
             </div>
           </CardContent>
@@ -438,7 +501,7 @@ export function SessionDetailView({ id }: { id: string }) {
           >
             <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
               <TabsTrigger value="present">
-                Present ({summary?.counts.present || 0})
+                Attended ({summary?.counts.attended || 0})
               </TabsTrigger>
               <TabsTrigger value="absent">
                 Absent ({summary?.counts.absent || 0})
@@ -461,11 +524,11 @@ export function SessionDetailView({ id }: { id: string }) {
                 <AttendanceUserList
                   users={summary?.presentUsers || []}
                   isLoading={isSummaryLoading}
-                  count={summary?.counts.present || 0}
+                  count={summary?.counts.attended || 0}
                   page={presentPage}
                   pageSize={pageSize}
                   onPageChange={setPresentPage}
-                  status="Present"
+                  status="Attended"
                   onUserStatusChange={handleUserStatusChange}
                 />
               </TabsContent>
@@ -532,13 +595,18 @@ export function SessionDetailView({ id }: { id: string }) {
 }
 
 interface AttendanceUserListProps {
-  users: { id: string; name: string; email: string }[];
+  users: {
+    id: string;
+    name: string;
+    email: string;
+    attendanceStatus?: "PRESENT" | "LATE" | "EXCUSED";
+  }[];
   isLoading: boolean;
   count: number;
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  status: "Present" | "Absent";
+  status: "Attended" | "Absent";
   onUserStatusChange: (
     userId: string,
     userName: string,
@@ -632,7 +700,7 @@ function AttendanceUserList({
           key={user.id}
           className={cn(
             "flex items-center justify-between p-3 border rounded-lg transition-colors",
-            status === "Present"
+            status === "Attended"
               ? "bg-green-50/50 dark:bg-green-900/10 hover:bg-green-100/50"
               : "opacity-70 hover:opacity-100"
           )}
@@ -646,17 +714,27 @@ function AttendanceUserList({
 
           <div className="flex items-center gap-2 flex-shrink-0">
             <Badge
-              variant={status === "Present" ? "default" : "outline"}
+              variant={status === "Attended" ? "default" : "outline"}
               className={
-                status === "Present"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "text-muted-foreground border-muted-foreground/30"
+                status !== "Attended"
+                  ? "text-muted-foreground border-muted-foreground/30"
+                  : user.attendanceStatus === "LATE"
+                    ? "bg-amber-600 hover:bg-amber-700"
+                    : user.attendanceStatus === "EXCUSED"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-green-600 hover:bg-green-700"
               }
             >
-              {status}
+              {status === "Absent"
+                ? status
+                : user.attendanceStatus === "LATE"
+                  ? "Late"
+                  : user.attendanceStatus === "EXCUSED"
+                    ? "Excused"
+                    : "Present"}
             </Badge>
 
-            {status === "Present" && (
+            {status === "Attended" && (
               <Button
                 variant="destructive"
                 size="icon"

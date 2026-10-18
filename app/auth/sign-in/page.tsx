@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -24,11 +24,12 @@ import { setAccessToken } from "@/lib/utils";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const isSubmitting = useRef(false);
   const router = useRouter();
 
   const searchParams = useSearchParams();
@@ -48,6 +49,9 @@ export default function SignInPage() {
 
       router.push(redirectPath);
     },
+    onError: () => {
+      isSubmitting.current = false;
+    },
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -59,6 +63,8 @@ export default function SignInPage() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     login(values);
   }
 
@@ -111,6 +117,7 @@ export default function SignInPage() {
                     />
                     <button
                       type="button"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >

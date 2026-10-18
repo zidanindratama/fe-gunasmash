@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -26,11 +26,11 @@ const formSchema = z
   .object({
     fullName: z
       .string()
-      .min(3, { message: "Name must be at least 3 characters." }),
+      .min(2, { message: "Name must be at least 2 characters." }),
     email: z.string().email({ message: "Invalid email address." }),
     password: z
       .string()
-      .min(8, { message: "Password must be at least 8 characters." }),
+      .min(6, { message: "Password must be at least 6 characters." }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -41,6 +41,7 @@ const formSchema = z
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const isSubmitting = useRef(false);
   const router = useRouter();
 
   const { mutate: register, isPending } = usePostData({
@@ -53,6 +54,9 @@ export default function SignUpPage() {
         response.user.role === "ADMIN" ? "/dashboard" : "/member/check-in";
 
       router.push(redirectPath);
+    },
+    onError: () => {
+      isSubmitting.current = false;
     },
   });
 
@@ -67,6 +71,9 @@ export default function SignUpPage() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
+
     const payload = {
       name: values.fullName,
       email: values.email,
@@ -140,6 +147,7 @@ export default function SignUpPage() {
                     />
                     <button
                       type="button"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -172,6 +180,11 @@ export default function SignUpPage() {
                     />
                     <button
                       type="button"
+                      aria-label={
+                        showConfirmPassword
+                          ? "Hide confirm password"
+                          : "Show confirm password"
+                      }
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }

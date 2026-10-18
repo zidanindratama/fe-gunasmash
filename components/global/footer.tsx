@@ -2,13 +2,10 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Instagram, Linkedin, Mail, Twitter } from "lucide-react";
+import { Mail } from "lucide-react";
 import { NAV_LINKS } from "@/routes/main-routes";
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "#", icon: Instagram },
-  { label: "Twitter/X", href: "#", icon: Twitter },
-  { label: "LinkedIn", href: "#", icon: Linkedin },
   { label: "Email", href: "mailto:contact@gunasmash.id", icon: Mail },
 ];
 
@@ -78,7 +75,7 @@ export function Footer() {
               ))}
               <li>
                 <Link
-                  href="/sign-in"
+                  href="/auth/sign-in"
                   className="group flex items-center gap-2 text-foreground hover:text-primary transition-colors text-lg font-medium w-fit"
                 >
                   <span className="w-0 group-hover:w-2 h-[2px] bg-primary transition-all duration-300" />

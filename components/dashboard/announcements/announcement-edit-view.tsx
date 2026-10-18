@@ -45,6 +45,7 @@ import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap/minimal-tipt
 import { useGetData } from "@/hooks/use-get-data";
 import { usePatchData } from "@/hooks/use-patch-data";
 import { useUploadData } from "@/hooks/use-upload-data";
+import { getDisplayImageUrl } from "@/lib/image-url";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 const ANNOUNCEMENT_TYPES = [
@@ -416,7 +417,7 @@ export function AnnouncementEditView({ id }: AnnouncementEditViewProps) {
                         {field.value ? (
                           <>
                             <Image
-                              src={field.value}
+                              src={getDisplayImageUrl(field.value)}
                               alt="Banner"
                               fill
                               className="object-cover"

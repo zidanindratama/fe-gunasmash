@@ -1,4 +1,27 @@
+"use client";
+
+import { useGetData } from "@/hooks/use-get-data";
+
+interface GlobalStats {
+  users: { total: number; admins: number; members: number };
+  announcements: { total: number };
+  blogs: { total: number; published: number; unpublished: number };
+  sessions: { total: number; today: number; upcomingOpen: number };
+}
+
 export default function DashboardOverview() {
+  const { data, isLoading, isError } = useGetData<GlobalStats>({
+    key: ["stats"],
+    url: "/stats",
+  });
+
+  const cards = [
+    { label: "Total Members", value: data?.users.members },
+    { label: "Announcements", value: data?.announcements.total },
+    { label: "Published Blogs", value: data?.blogs.published },
+    { label: "Attendance Sessions", value: data?.sessions.total },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -6,17 +29,24 @@ export default function DashboardOverview() {
           Dashboard Overview
         </h1>
         <p className="text-muted-foreground">
-          Welcome back, Captain. Here's what's happening today.
+          A live summary of your GunaSmash activity.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="p-6 bg-card rounded-xl border border-border shadow-sm">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
-            Total Members
-          </h3>
-          <p className="text-3xl font-bold mt-2">142</p>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => (
+          <div
+            key={card.label}
+            className="rounded-xl border border-border bg-card p-6 shadow-sm"
+          >
+            <h2 className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
+              {card.label}
+            </h2>
+            <p className="mt-2 text-3xl font-bold" aria-live="polite">
+              {isLoading ? "—" : isError ? "Unavailable" : (card.value ?? 0)}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

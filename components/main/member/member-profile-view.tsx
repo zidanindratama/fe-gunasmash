@@ -153,7 +153,7 @@ export function MemberProfileView() {
     : "U";
 
   return (
-    <div className="max-w-5xl mx-auto py-20 md:py-32 px-4">
+    <div className="w-full min-w-0 max-w-5xl mx-auto py-20 md:py-32 px-4">
       <div className="mb-10 text-center">
         <div className="flex items-center justify-center gap-3 mb-2 text-primary">
           <UserCircle className="h-6 w-6" />
@@ -161,7 +161,7 @@ export function MemberProfileView() {
             Member Profile
           </p>
         </div>
-        <h1 className="font-oswald text-4xl md:text-6xl font-bold uppercase tracking-tighter text-foreground leading-[1.1]">
+        <h1 className="break-words font-oswald text-4xl md:text-6xl font-bold uppercase tracking-tighter text-foreground leading-[1.1]">
           Manage Your <span className="text-primary">Identity</span>
         </h1>
         <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
@@ -170,12 +170,22 @@ export function MemberProfileView() {
         </p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-[350px_1fr]">
-        <Card className="h-fit shadow-xl border-2 border-border/50">
+      <div className="grid min-w-0 gap-8 md:grid-cols-[350px_1fr]">
+        <Card className="h-fit min-w-0 shadow-xl border-2 border-border/50">
           <CardHeader className="text-center pb-2">
             <div
               className="mx-auto mb-4 relative group cursor-pointer w-28 h-28"
+              role="button"
+              tabIndex={0}
+              aria-label="Change profile photo"
+              aria-busy={isUploading}
               onClick={handleAvatarClick}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleAvatarClick();
+                }
+              }}
             >
               <Avatar className="h-28 w-28 border-4 border-primary/20 shadow-xl transition-opacity group-hover:opacity-75">
                 <AvatarImage
@@ -230,7 +240,7 @@ export function MemberProfileView() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xl border-2 border-border/50">
+        <Card className="min-w-0 shadow-xl border-2 border-border/50">
           <CardHeader>
             <CardTitle className="font-oswald uppercase">
               Update Public Info
@@ -252,16 +262,16 @@ export function MemberProfileView() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-2.5 h-4 w-4 text-primary" />
+                      <div className="relative">
+                        <User className="absolute left-3 top-2.5 h-4 w-4 text-primary" />
+                        <FormControl>
                           <Input
                             className="pl-9"
                             placeholder="Your full name"
                             {...field}
                           />
-                        </div>
-                      </FormControl>
+                        </FormControl>
+                      </div>
                       <FormDescription>
                         This is your public display name.
                       </FormDescription>

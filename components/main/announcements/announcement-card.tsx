@@ -9,6 +9,7 @@ import { id } from "date-fns/locale";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getDisplayImageUrl } from "@/lib/image-url";
 
 // --- Asumsi Interface ---
 // Ini harus diimpor dari file data/type yang sesuai di proyek Anda.
@@ -46,14 +47,19 @@ const TYPE_COLORS: Record<AnnouncementType, string> = {
   INFO: "bg-gray-500/10 text-gray-500 border-gray-500/20 hover:bg-gray-500/20",
 };
 
-export function AnnouncementCard({ data }: { data: Announcement }) {
+export function AnnouncementCard({
+  data,
+  hrefBase = "/announcements",
+}: {
+  data: Announcement;
+  hrefBase?: string;
+}) {
   const dateStr = format(new Date(data.datetime), "EEEE, d MMMM yyyy • HH:mm", {
     locale: id,
   });
 
   const isTraining = data.type === "TRAINING" || data.type === "SPARRING";
-  // Asumsi semua link detail menggunakan /announcements/:id
-  const href = `/announcements/${data.id}`;
+  const href = `${hrefBase}/${data.id}`;
 
   return (
     <Link href={href} className="group block h-full">
@@ -61,7 +67,7 @@ export function AnnouncementCard({ data }: { data: Announcement }) {
         {data.imageUrl && (
           <div className="relative h-48 w-full overflow-hidden">
             <Image
-              src={data.imageUrl}
+              src={getDisplayImageUrl(data.imageUrl)}
               alt={data.title}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"

@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetData } from "@/hooks/use-get-data";
+import { getDisplayImageUrl } from "@/lib/image-url";
+import { useState } from "react";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=2070&auto=format&fit=crop";
@@ -33,9 +35,12 @@ export function AnnouncementDetailView({
   id: string;
   backLink?: string;
 }) {
+  const [shareStatus, setShareStatus] = useState("");
+  const isValidId = /^[a-f\d]{24}$/i.test(id);
   const { data, isLoading, isError } = useGetData<AnnouncementData>({
     url: `/announcements/${id}`,
     key: ["announcement-detail", id],
+    options: { enabled: isValidId, retry: false },
   });
 
   const HtmlContent = ({ content }: { content: string }) => (
@@ -71,6 +76,22 @@ export function AnnouncementDetailView({
       </div>
     );
   }
+
+  const shareAnnouncement = async () => {
+    const shareData = { title: data.title, url: window.location.href };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareStatus("Link shared");
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        setShareStatus("Link copied");
+      }
+    } catch {
+      setShareStatus("Unable to share this link");
+    }
+  };
 
   const dateStr = format(new Date(data.datetime), "EEEE, d MMMM yyyy", {
     locale: idLocale,
@@ -118,29 +139,35 @@ export function AnnouncementDetailView({
               </div>
               <div>
                 <p className="font-medium text-foreground">{data.location}</p>
-                <a
-                  href={data.locationLink || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Lihat di Peta
-                </a>
+                {data.locationLink && (
+                  <a
+                    href={data.locationLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Lihat di Peta
+                  </a>
+                )}
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
               className="ml-auto hidden sm:flex gap-2"
+              onClick={shareAnnouncement}
             >
               <Share2 className="w-4 h-4" /> Share
             </Button>
           </div>
+          <p aria-live="polite" className="sr-only">
+            {shareStatus}
+          </p>
         </div>
 
         <div className="relative w-full aspect-video (16/9) md:aspect-[21/9] rounded-3xl overflow-hidden mb-10 border border-border/50 shadow-lg">
           <Image
-            src={data.imageUrl || FALLBACK_IMAGE}
+            src={getDisplayImageUrl(data.imageUrl, FALLBACK_IMAGE)}
             alt={data.title}
             fill
             className="object-cover"

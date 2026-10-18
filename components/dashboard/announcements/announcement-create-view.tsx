@@ -40,6 +40,7 @@ import { axiosInstance } from "@/lib/axios";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap/minimal-tiptap";
 import { usePostData } from "@/hooks/use-post-data";
 import { useUploadData } from "@/hooks/use-upload-data";
+import { getDisplayImageUrl } from "@/lib/image-url";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 const ANNOUNCEMENT_TYPES = [
@@ -345,7 +346,7 @@ export function AnnouncementCreateView() {
                         {field.value ? (
                           <>
                             <Image
-                              src={field.value}
+                              src={getDisplayImageUrl(field.value)}
                               alt="Banner"
                               fill
                               className="object-cover"

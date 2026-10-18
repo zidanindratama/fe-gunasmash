@@ -133,7 +133,7 @@ export function AnnouncementsView() {
   const debouncedSearch = useDebounce(searchInput, 500);
 
   const queryParams = useMemo(() => {
-    const params: any = {
+    const params: Record<string, string | number> = {
       page: currentPage,
       limit: pageSize,
       orderBy: JSON.stringify({ datetime: sortOrder }),
@@ -152,9 +152,9 @@ export function AnnouncementsView() {
     return params;
   }, [currentPage, sortOrder, debouncedSearch, filterType]);
 
-  const { data: response, isLoading } = useGetData<ListResponse>({
+  const { data: response, isLoading, isError, refetch } = useGetData<ListResponse>({
     url: "/announcements",
-    key: ["announcements-list", queryParams],
+    key: ["announcements-list", JSON.stringify(queryParams)],
     params: queryParams,
   });
 
@@ -252,10 +252,23 @@ export function AnnouncementsView() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {renderSkeletons()}
           </div>
+        ) : isError ? (
+          <div className="text-center py-20 border border-dashed border-border rounded-2xl">
+            <p className="text-muted-foreground text-lg">
+              Unable to load announcements. Please try again.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-3"
+              onClick={() => void refetch()}
+            >
+              Try Again
+            </Button>
+          </div>
         ) : announcements.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {announcements.map((item) => (
-              <AnnouncementCard key={item.id} data={item as any} />
+              <AnnouncementCard key={item.id} data={item} />
             ))}
           </div>
         ) : (

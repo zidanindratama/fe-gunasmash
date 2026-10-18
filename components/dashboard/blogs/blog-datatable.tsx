@@ -178,7 +178,7 @@ export function BlogDataTable() {
         data={blogs}
         searchKey="title"
         filters={filters}
-        pageCount={apiData?.meta.pages || -1}
+        pageCount={Math.max(1, apiData?.meta.pages ?? 1)}
         pagination={pagination}
         onPaginationChange={setPagination}
         rowCount={apiData?.meta.total}

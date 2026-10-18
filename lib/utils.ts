@@ -8,6 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const ACCESS_TOKEN_KEY = "accessToken";
+export const AUTH_SYNC_STORAGE_KEY = "gunasmash:auth-sync";
 
 export const setAccessToken = (token: string | null) => {
   if (token) {
@@ -18,6 +19,17 @@ export const setAccessToken = (token: string | null) => {
     });
   } else {
     Cookies.remove(ACCESS_TOKEN_KEY);
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(
+        AUTH_SYNC_STORAGE_KEY,
+        `${token ? "signed-in" : "signed-out"}:${Date.now()}:${Math.random()}`
+      );
+    } catch {
+      // Storage can be unavailable in restricted browser contexts.
+    }
   }
 };
 

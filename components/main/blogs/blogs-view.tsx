@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, Filter, ArrowUpDown, X } from "lucide-react";
+import { Search, ArrowUpDown, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -143,7 +143,7 @@ export function BlogsView() {
     return params;
   }, [currentPage, sortOrder, debouncedSearch, filterTag]);
 
-  const { data: response, isLoading } = useGetData<ListResponse>({
+  const { data: response, isLoading, isError, refetch } = useGetData<ListResponse>({
     url: "/blogs",
     key: ["blogs-list", queryParams],
     params: queryParams,
@@ -267,6 +267,22 @@ export function BlogsView() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {renderSkeletons()}
+          </div>
+        ) : isError ? (
+          <div
+            role="alert"
+            className="text-center py-20 border border-dashed border-border rounded-2xl"
+          >
+            <p className="text-muted-foreground text-lg">
+              Unable to load articles. Please try again.
+            </p>
+            <Button
+              variant="link"
+              className="text-primary mt-2"
+              onClick={() => void refetch()}
+            >
+              Try Again
+            </Button>
           </div>
         ) : blogData.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

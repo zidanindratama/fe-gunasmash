@@ -11,15 +11,20 @@ interface CustomJwtPayload {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("accessToken")?.value;
+  const hasRefreshToken = request.cookies.has("refreshToken");
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/member");
 
   console.log(`--- Middleware Checking: ${pathname} ---`);
 
   if (!token) {
     console.log("No token found in cookies.");
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/member")) {
+    if (isProtectedRoute && !hasRefreshToken) {
       console.log("Redirecting to /unauthorized (No Token)");
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
+    // Let the client auth bootstrap try the HttpOnly refresh cookie before
+    // protected content is rendered.
     return NextResponse.next();
   }
 

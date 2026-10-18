@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { Calendar, Clock, ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { getDisplayImageUrl } from "@/lib/image-url";
 function stripHtmlTags(html: string): string {
   if (typeof window === "undefined") {
     return html.replace(/<[^>]*>?/gm, "");
@@ -18,7 +19,7 @@ interface Blog {
   title: string;
   slug: string;
   content: string;
-  coverUrl: string;
+  coverUrl: string | null;
   tags: string[];
   readTime: string;
   createdAt: string;
@@ -40,7 +41,7 @@ export function BlogCard({ data }: { data: Blog }) {
       <div className="relative flex flex-col h-full bg-card border border-border/50 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
         <div className="relative h-60 w-full overflow-hidden">
           <Image
-            src={data.coverUrl}
+            src={getDisplayImageUrl(data.coverUrl)}
             alt={data.title}
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -88,6 +89,7 @@ export function BlogCard({ data }: { data: Blog }) {
                   src={data.author.avatarUrl}
                   alt={data.author.name}
                   fill
+                  unoptimized
                   className="object-cover"
                 />
               </div>

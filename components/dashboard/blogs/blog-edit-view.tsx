@@ -39,6 +39,7 @@ import MultipleSelector, { Option } from "@/components/ui/multiple-selector";
 import { useGetData } from "@/hooks/use-get-data";
 import { usePatchData } from "@/hooks/use-patch-data";
 import { useUploadData } from "@/hooks/use-upload-data";
+import { getDisplayImageUrl } from "@/lib/image-url";
 
 const TAG_OPTIONS: Option[] = [
   { label: "News", value: "news" },
@@ -369,7 +370,7 @@ export function BlogEditView({ slug }: BlogEditViewProps) {
                         {field.value ? (
                           <>
                             <Image
-                              src={field.value}
+                              src={getDisplayImageUrl(field.value)}
                               alt="Cover"
                               fill
                               className="object-cover"

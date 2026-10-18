@@ -96,7 +96,7 @@ export function Hero() {
             size="lg"
             className="rounded-full h-14 px-8 text-base text-foreground hover:bg-foreground/5"
           >
-            <Link href={"/training"}>Explore Activities</Link>
+            <Link href={"/trainings"}>Explore Activities</Link>
           </Button>
         </motion.div>
       </motion.div>

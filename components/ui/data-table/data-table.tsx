@@ -40,6 +40,9 @@ interface DataTableProps<TData, TValue> {
   pagination?: PaginationState;
   onPaginationChange?: OnChangeFn<PaginationState>;
   rowCount?: number;
+  sorting?: SortingState;
+  onSortingChange?: OnChangeFn<SortingState>;
+  manualSorting?: boolean;
   // Server Side Filtering (Props Baru)
   columnFilters?: ColumnFiltersState;
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
@@ -54,6 +57,9 @@ export function DataTable<TData, TValue>({
   pagination,
   onPaginationChange,
   rowCount,
+  sorting: controlledSorting,
+  onSortingChange: onControlledSortingChange,
+  manualSorting = false,
   columnFilters,
   onColumnFiltersChange,
 }: DataTableProps<TData, TValue>) {
@@ -77,7 +83,7 @@ export function DataTable<TData, TValue>({
     pageCount: pageCount ?? -1,
     rowCount: rowCount,
     state: {
-      sorting,
+      sorting: controlledSorting ?? sorting,
       columnVisibility,
       rowSelection,
       // Gunakan state dari props (server side) atau internal (client side)
@@ -91,7 +97,8 @@ export function DataTable<TData, TValue>({
     manualFiltering: isServerSideFiltering, // PENTING: Matikan filtering client-side
 
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
+    onSortingChange: onControlledSortingChange ?? setSorting,
+    manualSorting,
 
     // Handler Filter
     onColumnFiltersChange: isServerSideFiltering
