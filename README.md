@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend GunaSmash
 
-## Getting Started
+Website untuk UKM Bulutangkis GunaSmash. Frontend ini menggunakan Next.js dan mengambil data dari backend GunaSmash.
 
-First, run the development server:
+## Fitur
 
-```bash
+- Halaman publik untuk profil klub, jadwal latihan, pengumuman, dan artikel.
+- Pendaftaran dan login anggota.
+- Area anggota untuk melihat profil dan melakukan check-in kehadiran.
+- Dashboard admin untuk mengelola pengumuman, sesi absensi, anggota, dan artikel.
+- Tampilan responsif, pilihan tema, serta pencarian dan tabel data pada dashboard.
+
+## Menjalankan di komputer lokal
+
+### Prasyarat
+
+- Node.js 20.9 atau lebih baru.
+- Backend GunaSmash sudah berjalan. Ikuti petunjuk di `../be-gunasmash/README.md`.
+
+### Instalasi
+
+Dari folder `fe-gunasmash`, jalankan:
+
+```powershell
+npm ci
+Copy-Item .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Konfigurasi alamat layanan
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Atur alamat aplikasi dan API di `.env.local`:
 
-## Learn More
+```dotenv
+NEXT_PUBLIC_API_URL=http://localhost:4000/api
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+- `NEXT_PUBLIC_API_URL` adalah alamat dasar API. Untuk backend di komputer yang sama, gunakan `http://localhost:4000/api`.
+- `NEXT_PUBLIC_APP_URL` adalah alamat website yang dipakai untuk metadata, sitemap, dan robots.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Salin `.env.example` sebagai titik awal. Ganti URL jika backend atau frontend berjalan di alamat atau port lain. Setelah mengubah environment, mulai ulang server frontend. Variabel dengan awalan `NEXT_PUBLIC_` dapat dilihat browser; jangan menyimpan password atau secret di sana.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Backend juga harus mengizinkan origin frontend lewat `CORS_WHITELIST` pada file `.env` backend. Contoh nilai lokal:
 
-## Deploy on Vercel
+```dotenv
+CORS_WHITELIST=http://localhost:3000,http://127.0.0.1:3000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Jika frontend berjalan di port lain, tambahkan origin yang sesuai ke daftar tersebut.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Perintah yang tersedia
+
+```bash
+npm run dev      # Jalankan server pengembangan
+npm run build    # Buat build produksi
+npm start        # Jalankan build produksi
+npm run lint     # Periksa kode dengan ESLint
+```
+
+Untuk menjalankan build produksi, atur variabel environment terlebih dahulu, lalu jalankan `npm run build` dan `npm start`.

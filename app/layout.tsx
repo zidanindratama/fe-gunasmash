@@ -24,8 +24,7 @@ const oswald = Oswald({
   weight: ["400", "500", "700"],
 });
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://fe-gunasmash.vercel.app/";
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

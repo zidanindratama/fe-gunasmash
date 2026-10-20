@@ -1,8 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const SITE_URL =
-    process.env.NEXT_PUBLIC_APP_URL || "https://fe-gunasmash.vercel.app/";
+  const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   return [
     {
