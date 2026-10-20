@@ -71,8 +71,8 @@ export const MOCK_BLOGS: Blog[] = [
     createdAt: "2025-01-28T09:00:00.000Z",
     readTime: "3 min read",
     author: {
-      name: "Zidan Indratama",
-      avatarUrl: "https://i.pravatar.cc/150?u=zidan",
+      name: "Andi Pratama",
+      avatarUrl: "https://i.pravatar.cc/150?u=andi-pratama",
     },
   },
   {

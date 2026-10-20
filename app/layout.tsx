@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   description:
     "Official portal for GunaSmash, a premium badminton community. Find training schedules, manage attendance, read game analysis blogs, and elevate your skills.",
   applicationName: "GunaSmash",
-  authors: [{ name: "Zidan Indratama", url: SITE_URL }],
+  authors: [{ name: "Andi Pratama", url: SITE_URL }],
   generator: "Next.js",
   keywords: [
     "Badminton Club",
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
     "Gunadarma",
     "Next.js App",
   ],
-  creator: "Zidan Indratama",
-  publisher: "Zidan Indratama",
+  creator: "Andi Pratama",
+  publisher: "Andi Pratama",
   category: "Sports",
   formatDetection: {
     email: false,
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     description:
       "Official portal for GunaSmash Badminton Club. Elevate Your Game.",
     images: ["/og-image.png"],
-    creator: "@zidanindratama",
+    creator: "@andipratama",
   },
   robots: {
     index: true,
